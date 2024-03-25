@@ -1,0 +1,50 @@
+# Changes here will be overwritten by Copier; do NOT edit manually
+_commit: v0.11.1
+_src_path: gh:entelecheia/hyperfast-docker-template
+app_clone_dirname: ''
+app_install_root: /workspace/projects
+app_server_name: app
+app_source_branch: main
+app_source_repo: ''
+author: Young Joon Lee
+clone_source_code: false
+container_workspace_root: /workspace
+copy_scripts_dir: true
+cuda_device_id: all
+docker_app_image_variant_name: space
+docker_apt_packages: fontconfig fonts-nanum google-perftools libcairo2-dev imagemagick
+    ffmpeg
+docker_base_build_from: "mcr.microsoft.com/devcontainers/base:ubuntu-20.04" 
+docker_base_image_variant_name: base
+docker_container_uid: 9001
+docker_container_username: dev
+docker_project_name: devcontainers
+docker_registry: ghcr.io
+docker_run_command: bash
+docker_timezone: Asia/Seoul
+docker_username: entelecheia
+email: entelecheia@hotmail.com
+enable_nvidia_gpu: true
+friendly_name: Development Containers
+github_repo_name: dev-containers
+github_username: entelecheia
+install_dotfiles: true
+install_pip_requirements: true
+jupyter_host_port: 18585
+jupyter_port: 8585
+jupyter_token: __juypter_token_(change_me)__
+launch_scripts: launch.sh
+main_branch: main
+project_description: Development containers seek to find ways to develop,
+    build, test, and deploy software in a containerized environment without the need
+    to install any software on your local machine.
+project_license: MIT
+project_short_description: Development containers, or dev containers, are Docker containers that are specifically configured to provide a fully featured development environment.
+ssh_host_port: 2222
+ssh_port: 22
+start_jupyter: true
+start_ssh_service: true
+use_deploy_workflows: true
+web_service_host_port: 18080
+web_service_port: 8080
+
