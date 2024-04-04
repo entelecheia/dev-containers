@@ -4,10 +4,7 @@
   "name": "Python 3",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "build": {
-    "dockerfile": ".devcontainer/Dockerfile",
-    "args": {
-      "PYTHON_VERSION": "3.10"
-    }
+    "dockerfile": ".docker/Dockerfile.ubuntu-22.04",
   },
 
   // Features to add to the dev container. More info: https://containers.dev/features.
