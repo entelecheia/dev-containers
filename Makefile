@@ -96,31 +96,31 @@ docker-login: ## login to docker
 	@bash .docker/.docker-scripts/docker-compose.sh login
 
 docker-build: ## build the docker app image
-	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-22.04"} \
+	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-20.04"} \
 	DOCKER_PROJECT_ID=$${DOCKER_PROJECT_ID:-"default"} \
 	bash .docker/.docker-scripts/docker-compose.sh build
 
 docker-config: ## show the docker app config
-	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-22.04"} \
+	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-20.04"} \
 	DOCKER_PROJECT_ID=$${DOCKER_PROJECT_ID:-"default"} \
 	bash .docker/.docker-scripts/docker-compose.sh config
 
 docker-push: ## push the docker app image
-	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-22.04"} \
+	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-20.04"} \
 	DOCKER_PROJECT_ID=$${DOCKER_PROJECT_ID:-"default"} \
 	bash .docker/.docker-scripts/docker-compose.sh push
 
 docker-run: ## run the docker base image
-	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-22.04"} \
+	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-20.04"} \
 	DOCKER_PROJECT_ID=$${DOCKER_PROJECT_ID:-"default"} \
 	bash .docker/.docker-scripts/docker-compose.sh run
 
 docker-up: ## launch the docker app image
-	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-22.04"} \
+	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-20.04"} \
 	DOCKER_PROJECT_ID=$${DOCKER_PROJECT_ID:-"default"} \
 	bash .docker/.docker-scripts/docker-compose.sh up
 
 docker-up-detach: ## launch the docker app image in detached mode
-	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-22.04"} \
+	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-20.04"} \
 	DOCKER_PROJECT_ID=$${DOCKER_PROJECT_ID:-"default"} \
 	bash .docker/.docker-scripts/docker-compose.sh up --detach

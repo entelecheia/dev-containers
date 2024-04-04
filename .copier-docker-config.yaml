@@ -10,10 +10,10 @@ container_workspace_root: /workspace
 copy_scripts_dir: true
 cuda_device_id: all
 docker_apt_packages: fontconfig fonts-nanum
-docker_build_from: library/ubuntu:22.04
+docker_build_from: library/ubuntu:20.04
 docker_container_uid: 9001
 docker_container_username: app
-docker_image_variant_name: ubuntu-22.04
+docker_image_variant_name: ubuntu-20.04
 docker_image_version_variable_name: IMAGE_VERSION
 docker_name_prefix: DEVCON
 docker_project_name: devcon
