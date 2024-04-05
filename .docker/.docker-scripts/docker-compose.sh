@@ -22,7 +22,7 @@ $0 build -v base
 # declare arguments
 PROJECT_ID=${DOCKER_PROJECT_ID:-"default"}
 COMMAND="build"
-VARIANT=${IMAGE_VARIANT:-"ubuntu-20.04"}
+VARIANT=${IMAGE_VARIANT:-"ubuntu-22.04"}
 RUN_COMMAND="bash"
 ADDITIONAL_ARGS=""
 
