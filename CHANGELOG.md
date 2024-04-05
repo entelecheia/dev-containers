@@ -1,5 +1,11 @@
 <!--next-version-placeholder-->
 
+## v0.2.1 (2024-04-05)
+
+### Fix
+
+* **docker:** Update Dockerfiles for Ubuntu .04 and 22.04 to install 'software-properties-common' package. ([`24ad536`](https://github.com/entelecheia/dev-containers/commit/24ad536223d92ffb5cf48a877ac715755306d116))
+
 ## v0.2.0 (2024-04-05)
 
 ### Feature
