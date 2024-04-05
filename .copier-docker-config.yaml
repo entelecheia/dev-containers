@@ -1,5 +1,5 @@
 # Changes here will be overwritten by Copier; do NOT edit manually
-_commit: v0.29.7
+_commit: v0.29.9
 _src_path: gh:entelecheia/hyperfast-docker-template
 app_dirname: entelecheia
 app_install_root: /opt
@@ -43,7 +43,7 @@ ssh_host_port: 2929
 ssh_port: 22
 use_deploy_workflows: true
 use_jupyter: true
-use_semantic_versioning_for_image: false
+use_semantic_versioning_for_image: true
 use_ssh_service: true
 use_web_service: true
 web_service_host_port: 19090
