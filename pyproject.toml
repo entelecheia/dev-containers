@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "devcon"
-version = "0.2.0"
+version = "0.2.1"
 description = "Development containers, or dev containers, are Docker containers that are specifically configured to provide a fully featured development environment."
 authors = ["Young Joon Lee <entelecheia@hotmail.com>"]
 license = "MIT"
