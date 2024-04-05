@@ -1,5 +1,11 @@
 <!--next-version-placeholder-->
 
+## v0.2.0 (2024-04-05)
+
+### Feature
+
+* **docker:** Update default image variant to ubuntu-22.04 ([`00951bc`](https://github.com/entelecheia/dev-containers/commit/00951bcfe91f7de7ad7cfc620bfe44533e2a5590))
+
 ## v0.1.0 (2024-04-05)
 
 ### Feature
