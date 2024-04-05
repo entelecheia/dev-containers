@@ -18,7 +18,7 @@ docker_image_version_variable_name: IMAGE_VERSION
 docker_name_prefix: DEVCON
 docker_project_name: devcon
 docker_registry: ghcr.io
-docker_run_command: bash
+docker_run_command: zsh
 docker_service_name: workspace
 docker_timezone: Asia/Seoul
 docker_username: entelecheia
