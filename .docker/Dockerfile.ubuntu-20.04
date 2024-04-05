@@ -11,8 +11,8 @@ LABEL org.opencontainers.image.licenses="MIT"
 ARG DEBIAN_FRONTEND=noninteractive
 # Updates the image and installs necessary packages
 RUN apt-get update --fix-missing \
-    && apt-get install -y curl wget jq sudo gosu git build-essential \
-    locales locales-all fontconfig fonts-nanum \
+&& apt-get install -y curl wget jq sudo gosu git build-essential software-properties-common \
+locales locales-all fontconfig fonts-nanum \
     tzdata openssh-server \
     # Cleans up unnecessary packages to reduce image size
     && apt-get autoremove -y \

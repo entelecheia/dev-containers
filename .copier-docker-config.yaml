@@ -1,5 +1,5 @@
 # Changes here will be overwritten by Copier; do NOT edit manually
-_commit: v0.29.5
+_commit: v0.29.7
 _src_path: gh:entelecheia/hyperfast-docker-template
 app_dirname: entelecheia
 app_install_root: /opt
@@ -33,14 +33,12 @@ jupyter_port: 8585
 jupyter_token: __juypter_token_(change_me)__
 launch_scripts: launch.sh
 main_branch: main
-project_description:
-  Development containers seek to find ways to develop, build, test,
-  and deploy software in a containerized environment without the need to install
-  any software on your local machine.
+project_description: Development containers seek to find ways to develop, build, test,
+    and deploy software in a containerized environment without the need to install
+    any software on your local machine.
 project_license: MIT
-project_short_description:
-  Development containers, or dev containers, are Docker containers
-  that are specifically configured to provide a fully featured development environment.
+project_short_description: Development containers, or dev containers, are Docker containers
+    that are specifically configured to provide a fully featured development environment.
 ssh_host_port: 2929
 ssh_port: 22
 use_deploy_workflows: true
@@ -50,3 +48,4 @@ use_ssh_service: true
 use_web_service: true
 web_service_host_port: 19090
 web_service_port: 8080
+
