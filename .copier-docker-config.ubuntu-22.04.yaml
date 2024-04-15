@@ -1,0 +1,51 @@
+# Changes here will be overwritten by Copier; do NOT edit manually
+_commit: v0.30.0
+_src_path: gh:entelecheia/hyperfast-docker-template
+app_dirname: entelecheia
+app_install_root: /opt
+author: Young Joon Lee
+build_images_from_dockerfile: true
+container_service_name: app
+container_workspace_root: /workspace
+copy_scripts_dir: true
+cuda_device_id: all
+docker_apt_packages: fontconfig fonts-nanum
+docker_build_from: library/ubuntu:22.04
+docker_container_uid: 9001
+docker_container_username: app
+docker_image_variant_name: ubuntu-22.04
+docker_image_version_variable_name: IMAGE_VERSION
+docker_name_prefix: DEVCON
+docker_project_name: devcon
+docker_registry: ghcr.io
+docker_run_command: zsh
+docker_service_name: workspace
+docker_timezone: Asia/Seoul
+docker_username: entelecheia
+email: entelecheia@hotmail.com
+enable_nvidia_gpu: true
+friendly_name: Development Containers
+github_repo_name: dev-containers
+github_username: entelecheia
+install_dotfiles: true
+jupyter_host_port: 18998
+jupyter_port: 8585
+jupyter_token: __juypter_token_(change_me)__
+launch_scripts: launch.sh
+main_branch: main
+project_description: Development containers seek to find ways to develop, build, test,
+    and deploy software in a containerized environment without the need to install
+    any software on your local machine.
+project_license: MIT
+project_short_description: Development containers, or dev containers, are Docker containers
+    that are specifically configured to provide a fully featured development environment.
+ssh_host_port: 2929
+ssh_port: 22
+use_deploy_workflows: true
+use_jupyter: true
+use_semantic_versioning_for_image: true
+use_ssh_service: true
+use_web_service: true
+web_service_host_port: 19090
+web_service_port: 8080
+
