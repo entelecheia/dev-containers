@@ -1,5 +1,5 @@
 # Changes here will be overwritten by Copier; do NOT edit manually
-_commit: v0.29.9
+_commit: v0.30.0
 _src_path: gh:entelecheia/hyperfast-docker-template
 app_dirname: entelecheia
 app_install_root: /opt
