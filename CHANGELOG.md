@@ -1,5 +1,11 @@
 <!--next-version-placeholder-->
 
+## v0.3.0 (2024-04-15)
+
+### Feature
+
+* **docker:** Add entrypoint script for setting up user permissions ([`36c899c`](https://github.com/entelecheia/dev-containers/commit/36c899cb359de5b18688d1a56e74b356bdd9423b))
+
 ## v0.2.1 (2024-04-05)
 
 ### Fix
