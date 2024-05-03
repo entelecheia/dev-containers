@@ -7,9 +7,10 @@ services:
     restart: unless-stopped
     # Sets the hostname of the container
     hostname: $CONTAINER_HOSTNAME
-    command:
-      # Specifies the command to be executed when the container is run
-      - bash
+    tty: true
+    # command:
+    #   # Specifies the command to be executed when the container is run
+    #   - bash
     ulimits:
       # Sets the stack size and memory lock limits
       stack: 67108864
