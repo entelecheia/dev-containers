@@ -1,0 +1,37 @@
+version: "3"
+
+services:
+  # Defines a service name
+  workspace:
+    image: nvcr.io/nvidia/cuda:12.1.0-devel-ubuntu22.04
+    restart: unless-stopped
+    # Sets the hostname of the container
+    hostname: $CONTAINER_HOSTNAME
+    command:
+      # Specifies the command to be executed when the container is run
+      - bash
+    ulimits:
+      # Sets the stack size and memory lock limits
+      stack: 67108864
+      memlock: -1
+    # Allows the container to use the host's IPC namespace
+    ipc: $CONTAINER_IPC
+    ports:
+      # Maps the container's SSH and Web service ports to the host's ports
+      - "$HOST_SSH_PORT:$CONTAINER_SSH_PORT"
+    volumes:
+      # Maps directories from the host to the container
+      - "$HOST_WORKSPACE_ROOT:/data"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            # Reserves the specified GPU for the container
+            - driver: nvidia
+              device_ids: ["${CONTAINER_CUDA_DEVICE_ID}"]
+              capabilities: [gpu]
+networks:
+  default:
+    # Sets the name of the default network and makes it external
+    name: $CONTAINER_NETWORK_NAME
+    external: true
