@@ -1,5 +1,12 @@
 <!--next-version-placeholder-->
 
+## v0.4.0 (2024-05-05)
+
+### Feature
+
+* **docker:** Add Dockerfile for CUDA 12.1.0 on Ubuntu 22.04 ([`0fe9308`](https://github.com/entelecheia/dev-containers/commit/0fe9308bba17bf11af86aa02df28de937413b070))
+* **docker:** Add cuda 12.1 development environment configuration for Ubuntu 22.04 ([`8f5c8c0`](https://github.com/entelecheia/dev-containers/commit/8f5c8c0635f44f4417281368db8289584161fc7e))
+
 ## v0.3.0 (2024-04-15)
 
 ### Feature
