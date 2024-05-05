@@ -1,5 +1,11 @@
 <!--next-version-placeholder-->
 
+## v0.4.1 (2024-05-05)
+
+### Fix
+
+* **app:** Change default container username to 'dev' ([`e354663`](https://github.com/entelecheia/dev-containers/commit/e354663b5994994a90ac768c877013d78c00c067))
+
 ## v0.4.0 (2024-05-05)
 
 ### Feature
