@@ -48,7 +48,7 @@ ENV TZ="Asia/Seoul"
 RUN localedef -v -c -i en_US -f UTF-8 en_US.UTF-8 || true
 
 # Setting ARGs and ENVs for user creation and workspace setup
-ARG ARG_USERNAME="app"
+ARG ARG_USERNAME="dev"
 ARG ARG_USER_UID=9001
 ARG ARG_USER_GID=$ARG_USER_UID
 ENV USERNAME $ARG_USERNAME
