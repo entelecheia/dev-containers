@@ -44,7 +44,7 @@ RUN mkdir -p /var/run/sshd
 RUN service ssh start
 
 # Setting ARGs and ENVs for user creation and workspace setup
-ARG ARG_USERNAME="app"
+ARG ARG_USERNAME="dev"
 ARG ARG_USER_UID=9001
 ARG ARG_USER_GID=$ARG_USER_UID
 ENV USERNAME $ARG_USERNAME
