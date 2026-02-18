@@ -1,25 +1,18 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/python
 {
-  "name": "Python 3",
+  "name": "Dev Container",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "build": {
-    "dockerfile": ".docker/Dockerfile.ubuntu-22.04",
+    "dockerfile": "../.docker/Dockerfile.ubuntu-22.04"
   },
 
-  // Features to add to the dev container. More info: https://containers.dev/features.
-  // "features": {},
-
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  "forwardPorts": [8888],
+  "forwardPorts": [8585, 8080],
 
-  // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "pip3 install --user -r requirements.txt",
-  "postCreateCommand": "pip install --upgrade pip && pip install torch torchvision torchaudio && pip install jupyter"
+  // Install uv and sync dependencies after container creation
+  "postCreateCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env && uv sync",
 
-  // Configure tool-specific properties.
-  // "customizations": {},
-
-  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  // "remoteUser": "root"
+  // Connect as non-root user
+  "remoteUser": "dev"
 }

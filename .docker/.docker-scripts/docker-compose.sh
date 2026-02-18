@@ -24,7 +24,7 @@ PROJECT_ID=${DOCKER_PROJECT_ID:-"default"}
 COMMAND="build"
 VARIANT=${IMAGE_VARIANT:-"ubuntu-22.04"}
 RUN_COMMAND="bash"
-ADDITIONAL_ARGS=""
+ADDITIONAL_ARGS=()
 
 set +u
 # read arguments
@@ -65,14 +65,14 @@ while [[ $# -gt 0 ]]; do
         exit 0
         ;;
     *)
-        ADDITIONAL_ARGS="$ADDITIONAL_ARGS $1"
+        ADDITIONAL_ARGS+=("$1")
         ;;
     esac
     shift
 done
 # check if remaining arguments exist
-if [[ -n "$ADDITIONAL_ARGS" ]]; then
-    echo "Additional arguments: $ADDITIONAL_ARGS" >&2
+if [[ ${#ADDITIONAL_ARGS[@]} -gt 0 ]]; then
+    echo "Additional arguments: ${ADDITIONAL_ARGS[*]}" >&2
 fi
 set -u
 
@@ -97,13 +97,18 @@ else
 fi
 echo "---"
 
+# Export host user UID/GID so containers match host permissions
+# Named projects (.ids/*.env) can override these if needed
+export USER_UID=${USER_UID:-$(id -u)}
+export USER_GID=${USER_GID:-$(id -g)}
+
 # load environment variables and print them
 set -a
-# load secert environment variables from .env.secret
+# load secret environment variables from .env.secret
 DOCKER_SECRET_ENV_FILENAME=${DOCKER_SECRET_ENV_FILENAME:-".env.secret"}
 if [ -e "${DOCKER_SECRET_ENV_FILENAME}" ]; then
     echo "Loading secret environment variables from ${DOCKER_SECRET_ENV_FILENAME}"
-    set -x # print commands and thier arguments
+    set -x # print commands and their arguments
     # shellcheck disable=SC1091,SC1090
     source "${DOCKER_SECRET_ENV_FILENAME}"
     set +x # disable printing of environment variables
@@ -118,7 +123,7 @@ if [ ! -e "${DOCKER_GLOBAL_ENV_FILENAME}" ] && [ -e "${DOCKER_GLOBAL_ENV_FILE}" 
 fi
 if [ -e "${DOCKER_GLOBAL_ENV_FILENAME}" ]; then
     echo "Loading global environment variables from ${DOCKER_GLOBAL_ENV_FILENAME}"
-    set -x # print commands and thier arguments
+    set -x # print commands and their arguments
     # shellcheck disable=SC1091,SC1090
     source "${DOCKER_GLOBAL_ENV_FILENAME}"
     set +x # disable printing of environment variables
@@ -128,21 +133,21 @@ source .docker/docker.version
 PROJECT_ID_ENV_FILE=".docker/.ids/${PROJECT_ID}.env"
 if [ -e "${PROJECT_ID_ENV_FILE}" ]; then
     echo "Loading project ID specific environment variables from ${PROJECT_ID_ENV_FILE}"
-    set -x # print commands and thier arguments
+    set -x # print commands and their arguments
     # shellcheck disable=SC1091,SC1090
     source "${PROJECT_ID_ENV_FILE}"
     set +x # disable printing of environment variables
 fi
 if [ -e .docker/docker.common.env ]; then
     echo "Loading common environment variables from .docker/docker.common.env"
-    set -x # print commands and thier arguments
+    set -x # print commands and their arguments
     # shellcheck disable=SC1091
     source .docker/docker.common.env
     set +x # disable printing of environment variables
 fi
 if [ -e ".docker/docker.${VARIANT}.env" ]; then
     echo "Loading environment variables from .docker/docker.${VARIANT}.env"
-    set -x # print commands and thier arguments
+    set -x # print commands and their arguments
     # shellcheck disable=SC1091,SC1090
     source ".docker/docker.${VARIANT}.env"
     set +x # disable printing of environment variables
@@ -175,16 +180,19 @@ HOST_GH_CONFIG_DIR="${HOST_GH_CONFIG_DIR:-}"
 HOST_PASSAGE_DIR="${HOST_PASSAGE_DIR:-}"
 [ -n "${HOST_PASSAGE_DIR}" ] && [ ! -d "${HOST_PASSAGE_DIR}" ] && mkdir -p "${HOST_PASSAGE_DIR}"
 
-# run docker-compose
+# run docker compose
 if [ "${COMMAND}" == "push" ]; then
-    CMD="docker push ${CONTAINER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+    docker push "${CONTAINER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
 elif [ "${COMMAND}" == "login" ]; then
     echo "GITHUB_CR_PAT: $GITHUB_CR_PAT"
-    CMD="docker login ghcr.io -u $GITHUB_USERNAME"
+    docker login ghcr.io -u "$GITHUB_USERNAME"
 elif [ "${COMMAND}" == "run" ]; then
-    CMD="docker compose --project-directory . -f .docker/docker-compose.${VARIANT}.yaml run workspace ${RUN_COMMAND} ${ADDITIONAL_ARGS}"
+    docker compose --project-directory . \
+        -f ".docker/docker-compose.${VARIANT}.yaml" \
+        run workspace "${RUN_COMMAND}" "${ADDITIONAL_ARGS[@]}"
 else
-    CMD="docker-compose --project-directory . -f .docker/docker-compose.${VARIANT}.yaml -p ${CONTAINER_PROJECT_NAME} ${COMMAND} ${ADDITIONAL_ARGS}"
+    docker compose --project-directory . \
+        -f ".docker/docker-compose.${VARIANT}.yaml" \
+        -p "${CONTAINER_PROJECT_NAME}" \
+        "${COMMAND}" "${ADDITIONAL_ARGS[@]}"
 fi
-echo "Running command: ${CMD}"
-eval "${CMD}"

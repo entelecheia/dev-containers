@@ -1,10 +1,7 @@
-version: "3"
-
 services:
   # Defines a service name
   workspace:
     image: nvcr.io/nvidia/cuda:12.1.0-devel-ubuntu22.04
-    restart: unless-stopped
     # Sets the hostname of the container
     hostname: $CONTAINER_HOSTNAME
     restart: always
