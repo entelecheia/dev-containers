@@ -4,7 +4,7 @@
   "name": "Dev Container",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "build": {
-    "dockerfile": "../.docker/Dockerfile.ubuntu-22.04"
+    "dockerfile": "../.docker/Dockerfile.ubuntu"
   },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.

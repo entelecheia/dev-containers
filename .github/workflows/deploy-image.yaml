@@ -1,0 +1,113 @@
+name: deploy-image
+
+on:
+  workflow_call:
+    inputs:
+      variant:
+        description: "Image variant to build"
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: "Image variant to build"
+        required: true
+        type: choice
+        options:
+          - ubuntu-22.04
+          - ubuntu-20.04
+          - cuda-12.1.0-ubuntu22.04
+          - cuda-12.8.0-ubuntu22.04
+  push:
+    branches:
+      - docker*
+    paths:
+      - ".docker/**"
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  determine-variants:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo 'matrix=["${{ inputs.variant }}"]' >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" == "workflow_call" ]; then
+            echo 'matrix=["${{ inputs.variant }}"]' >> "$GITHUB_OUTPUT"
+          else
+            # On push: build all active variants
+            echo 'matrix=["ubuntu-22.04","cuda-12.1.0-ubuntu22.04"]' >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-push-image:
+    needs: determine-variants
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        variant: ${{ fromJSON(needs.determine-variants.outputs.matrix) }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Secure disk space for the build
+        run: bash .github/scripts/free-disk-space.sh
+
+      - name: Version from version file
+        uses: c-py/action-dotenv-to-setenv@v5
+        with:
+          env-file: ./.docker/docker.version
+
+      - name: Common environment variables
+        uses: c-py/action-dotenv-to-setenv@v5
+        with:
+          env-file: ./.docker/docker.common.env
+
+      - name: Variant environment variables
+        uses: c-py/action-dotenv-to-setenv@v5
+        with:
+          env-file: ./.docker/variants/${{ matrix.variant }}.env
+
+      - name: Compute image metadata
+        run: |
+          echo "IMAGE_VARIANT=${{ matrix.variant }}" >> "$GITHUB_ENV"
+          echo "IMAGE_TAG=${IMAGE_VERSION}-${{ matrix.variant }}" >> "$GITHUB_ENV"
+          echo "IMAGE_NAME=${CONTAINER_REGISTRY}/${DOCKER_USERNAME}/${DOCKER_PROJECT_NAME}" >> "$GITHUB_ENV"
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5.5.1
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ env.IMAGE_TAG }}
+            type=raw,value=latest-${{ matrix.variant }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5.3.0
+        with:
+          context: .
+          file: ./.docker/Dockerfile.${{ env.VARIANT_TYPE }}
+          build-args: |
+            ARG_BUILD_FROM=${{ env.BUILD_FROM }}
+            ARG_USERNAME=${{ env.CONTAINER_USERNAME }}
+            ARG_USER_UID=${{ env.CONTAINER_USER_UID }}
+            ARG_USER_GID=${{ env.CONTAINER_USER_GID }}
+            ARG_WORKSPACE_ROOT=${{ env.CONTAINER_WORKSPACE_ROOT }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

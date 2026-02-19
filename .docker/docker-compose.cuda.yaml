@@ -1,49 +1,35 @@
 services:
-  # Defines a service name
   workspace:
     build:
-      # Sets the build context to the current directory
       context: .
-      # Specifies the Dockerfile to use for the build
-      dockerfile: .docker/Dockerfile.cuda-12.8.0-ubuntu22.04
-      # Specifies build-time variables (ARGs)
+      dockerfile: .docker/Dockerfile.cuda
       args:
         ARG_BUILD_FROM: $BUILD_FROM
         ARG_USERNAME: $CONTAINER_USERNAME
         ARG_USER_UID: $CONTAINER_USER_UID
         ARG_USER_GID: $CONTAINER_USER_GID
         ARG_WORKSPACE_ROOT: $CONTAINER_WORKSPACE_ROOT
-    # Sets the image name for the built image
     image: $IMAGE_NAME:$IMAGE_TAG
-    # Sets the hostname of the container
     hostname: $CONTAINER_HOSTNAME
     restart: always
     tty: true
-    # Sets shared memory size for large model inference
-    shm_size: '32gb'
-    # set the environment variables
+    shm_size: ${SHM_SIZE:-32gb}
     ulimits:
-      # Sets the stack size and memory lock limits
       stack: 67108864
       memlock: -1
-    # Allows the container to use the host's IPC namespace
     ipc: $CONTAINER_IPC
     ports:
-      # Maps the container's SSH port to the host's port
       - "$HOST_SSH_PORT:$CONTAINER_SSH_PORT"
     volumes:
-      # Maps directories from the host to the container
       - "$HOST_WORKSPACE_ROOT:$CONTAINER_WORKSPACE_ROOT"
     deploy:
       resources:
         reservations:
           devices:
-            # Reserves the specified GPU for the container
             - driver: nvidia
               device_ids: ["${CONTAINER_CUDA_DEVICE_ID}"]
               capabilities: [gpu]
 networks:
   default:
-    # Sets the name of the default network and makes it external
     name: $CONTAINER_NETWORK_NAME
     external: true
