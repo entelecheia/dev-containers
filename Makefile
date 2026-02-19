@@ -145,3 +145,8 @@ docker-up-detach: ## launch the docker app image in detached mode
 	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-22.04"} \
 	DOCKER_PROJECT_ID=$${DOCKER_PROJECT_ID:-"default"} \
 	bash .docker/.docker-scripts/docker-compose.sh up --detach
+
+docker-down: ## stop the docker app container
+	@IMAGE_VARIANT=$${IMAGE_VARIANT:-"ubuntu-22.04"} \
+	DOCKER_PROJECT_ID=$${DOCKER_PROJECT_ID:-"default"} \
+	bash .docker/.docker-scripts/docker-compose.sh down

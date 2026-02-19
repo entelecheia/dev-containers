@@ -1,5 +1,6 @@
 # Sets the base image for subsequent instructions
-FROM nvcr.io/nvidia/cuda:12.8.0-devel-ubuntu22.04 AS builder
+ARG BUILD_FROM="library/ubuntu:22.04"
+FROM ${BUILD_FROM} AS builder
 
 # Sets labels for the image
 LABEL org.opencontainers.image.source="https://github.com/entelecheia/dev-containers"
@@ -23,22 +24,28 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # Setting ARGs and ENVs for the app
+ARG ARG_APP_INSTALL_ROOT="/opt"
+ARG ARG_APP_DIRNAME="entelecheia"
+ENV APP_INSTALL_ROOT $ARG_APP_INSTALL_ROOT
+ENV APP_DIRNAME $ARG_APP_DIRNAME
+ENV APP_SRC_DIR=${APP_INSTALL_ROOT}/${APP_DIRNAME}
+ENV APP_VIRTUAL_ENV=${APP_INSTALL_ROOT}/.venvs/${APP_DIRNAME}
+ENV PATH="$APP_VIRTUAL_ENV/bin:$PATH"
+ENV APP_WORKSPACE_ROOT=${APP_INSTALL_ROOT}/workspace
 ARG ARG_WORKSPACE_ROOT="/workspace"
 ENV WORKSPACE_ROOT $ARG_WORKSPACE_ROOT
 # Sets up the workspace for the user
-RUN mkdir -p $WORKSPACE_ROOT
+RUN mkdir -p $WORKSPACE_ROOT/projects
 
 # Sets the working directory to workspace root
 WORKDIR $WORKSPACE_ROOT
+# Copies scripts from host into the image
+COPY ./.docker/scripts/ ./scripts/
 
 # Sets the time zone within the container
 ENV TZ="Asia/Seoul"
 # Sets up the locale to en_US.UTF-8
 RUN localedef -v -c -i en_US -f UTF-8 en_US.UTF-8 || true
-
-# Start SSH server
-RUN mkdir -p /var/run/sshd
-RUN service ssh start
 
 # Setting ARGs and ENVs for user creation and workspace setup
 ARG ARG_USERNAME="dev"
@@ -66,3 +73,38 @@ RUN if id -u $USERNAME >/dev/null 2>&1; then \
         echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME && \
         chmod 0440 /etc/sudoers.d/$USERNAME; \
     fi
+
+# Fixes sudo error related to core dumps
+RUN echo "Set disable_coredump false" > /etc/sudo.conf
+
+# Install dotfiles
+USER $USERNAME
+
+ARG ARG_USER_FULLNAME="Dev User"
+ARG ARG_USER_EMAIL="dev@domain.com"
+ARG ARG_GITHUB_USERNAME=""
+ARG ARG_SYSTEM_HOSTNAME="dev-container"
+ARG ARG_WORKSPACE_LOCATION="/"
+ENV USER_FULLNAME $ARG_USER_FULLNAME
+ENV USER_EMAIL $ARG_USER_EMAIL
+ENV GITHUB_USERNAME $ARG_GITHUB_USERNAME
+ENV SYSTEM_HOSTNAME $ARG_SYSTEM_HOSTNAME
+ENV WORKSPACE_LOCATION $ARG_WORKSPACE_LOCATION
+
+ENV DOTFILES_APPLY_ROOTMOI=0
+ENV DOTFILES_USE_CODE=1
+ENV DOTFILES_USE_PYTHON_TOOLS=1
+ENV REMOTE_CONTAINERS=1
+
+RUN sh -c "$(wget -qO- https://dotfiles.entelecheia.ai/install)"
+USER root
+
+# Copies entrypoint script from host into the image
+COPY ./.docker/scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+# Changes the entrypoint script permissions to make it executable
+RUN chmod +x /usr/local/bin/entrypoint.sh
+# Sets the entrypoint script as the default command that will be executed when the container is run
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# Specifies the command that will be executed when the container is run
+CMD ["bash"]

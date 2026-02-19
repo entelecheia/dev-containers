@@ -1,6 +1,5 @@
 #!/bin/bash
-# add your custom commands here that should be executed when building the docker image
-# arguments usage
+# Docker compose orchestration script
 USAGE="
 $0 COMMAND [OPTIONS]
 
@@ -13,10 +12,10 @@ Options:
 -r, --run RUN_COMMAND           Specify a command to run when using the 'run' command. Default: bash
 -h, --help                      Display this help message.
 
-Additional arguments can be provided after the Docker name, and they will be passed directly to the Docker Compose command.
+Additional arguments can be provided after the options, and they will be passed directly to the Docker Compose command.
 
 Example:
-$0 build -v base
+$0 build -v ubuntu-22.04
 "
 
 # declare arguments
@@ -27,7 +26,6 @@ RUN_COMMAND="bash"
 ADDITIONAL_ARGS=()
 
 set +u
-# read arguments
 # first argument is the command
 COMMAND="$1"
 shift
@@ -35,66 +33,30 @@ shift
 # parse options
 while [[ $# -gt 0 ]]; do
     case "$1" in
-    -v | --variant)
-        VARIANT="$2"
-        shift
-        ;;
-    --variant=*)
-        VARIANT="${1#*=}"
-        ;;
-    -p | --pid)
-        PROJECT_ID="$2"
-        shift
-        ;;
-    --pid=*)
-        PROJECT_ID="${1#*=}"
-        ;;
-    -r | --run)
-        RUN_COMMAND="$2"
-        shift
-        ;;
-    --run=*)
-        RUN_COMMAND="${1#*=}"
-        ;;
-    -h | --help)
-        echo "Usage: $0 $USAGE" >&2
-        exit 0
-        ;;
-    -h*)
-        echo "Usage: $0 $USAGE" >&2
-        exit 0
-        ;;
-    *)
-        ADDITIONAL_ARGS+=("$1")
-        ;;
+    -v | --variant)     VARIANT="$2"; shift ;;
+    --variant=*)        VARIANT="${1#*=}" ;;
+    -p | --pid)         PROJECT_ID="$2"; shift ;;
+    --pid=*)            PROJECT_ID="${1#*=}" ;;
+    -r | --run)         RUN_COMMAND="$2"; shift ;;
+    --run=*)            RUN_COMMAND="${1#*=}" ;;
+    -h | --help | -h*)  echo "Usage: $0 $USAGE" >&2; exit 0 ;;
+    *)                  ADDITIONAL_ARGS+=("$1") ;;
     esac
     shift
 done
-# check if remaining arguments exist
-if [[ ${#ADDITIONAL_ARGS[@]} -gt 0 ]]; then
-    echo "Additional arguments: ${ADDITIONAL_ARGS[*]}" >&2
-fi
 set -u
 
-if [ "${COMMAND}" == "build" ]; then
-    echo "Building docker image for variant: ${VARIANT}"
-elif [ "${COMMAND}" == "config" ]; then
-    echo "Printing docker config for variant: ${VARIANT}"
-elif [ "${COMMAND}" == "push" ]; then
-    echo "Pushing docker image for variant: ${VARIANT}"
-elif [ "${COMMAND}" == "up" ]; then
-    echo "Starting docker container for variant: ${VARIANT}"
-elif [ "${COMMAND}" == "down" ]; then
-    echo "Stopping docker container for variant: ${VARIANT}"
-elif [ "${COMMAND}" == "run" ]; then
-    echo "Running docker container for variant: ${VARIANT}"
-elif [ "${COMMAND}" == "login" ]; then
-    echo "Logging into docker registry for variant: ${VARIANT}"
-else
-    echo "Invalid command: $COMMAND" >&2
-    echo "Usage: $0 $USAGE" >&2
-    exit 1
-fi
+# validate command
+case "${COMMAND}" in
+    build|config|push|login|up|down|run)
+        echo "${COMMAND^}ing docker for variant: ${VARIANT}, project: ${PROJECT_ID}"
+        ;;
+    *)
+        echo "Invalid command: $COMMAND" >&2
+        echo "Usage: $0 $USAGE" >&2
+        exit 1
+        ;;
+esac
 echo "---"
 
 # Export host user UID/GID so containers match host permissions
@@ -102,59 +64,73 @@ echo "---"
 export USER_UID=${USER_UID:-$(id -u)}
 export USER_GID=${USER_GID:-$(id -g)}
 
-# load environment variables and print them
+# --- Load environment variables (order matters: later sources override earlier) ---
 set -a
-# load secret environment variables from .env.secret
+
+# 1. Secret environment variables
 DOCKER_SECRET_ENV_FILENAME=${DOCKER_SECRET_ENV_FILENAME:-".env.secret"}
 if [ -e "${DOCKER_SECRET_ENV_FILENAME}" ]; then
-    echo "Loading secret environment variables from ${DOCKER_SECRET_ENV_FILENAME}"
-    set -x # print commands and their arguments
+    echo "Loading secret env from ${DOCKER_SECRET_ENV_FILENAME}"
     # shellcheck disable=SC1091,SC1090
     source "${DOCKER_SECRET_ENV_FILENAME}"
-    set +x # disable printing of environment variables
 fi
-# load global environment variables from .env.docker
-DOCKERFILES_SHARE_DIR=${DOCKERFILES_SHARE_DIR:-"$HOME/.local/share/dockerfiles"}
+
+# 2. Global docker environment (shared across repos)
 DOCKER_GLOBAL_ENV_FILENAME=${DOCKER_GLOBAL_ENV_FILENAME:-".env.docker"}
-DOCKER_GLOBAL_ENV_FILE=${DOCKER_GLOBAL_ENV_FILE:-"${DOCKERFILES_SHARE_DIR}/${DOCKER_GLOBAL_ENV_FILENAME}"}
-if [ ! -e "${DOCKER_GLOBAL_ENV_FILENAME}" ] && [ -e "${DOCKER_GLOBAL_ENV_FILE}" ]; then
-    echo "Symlinking ${DOCKER_GLOBAL_ENV_FILE} to ${DOCKER_GLOBAL_ENV_FILENAME}"
-    ln -s "${DOCKER_GLOBAL_ENV_FILE}" "${DOCKER_GLOBAL_ENV_FILENAME}"
-fi
 if [ -e "${DOCKER_GLOBAL_ENV_FILENAME}" ]; then
-    echo "Loading global environment variables from ${DOCKER_GLOBAL_ENV_FILENAME}"
-    set -x # print commands and their arguments
+    echo "Loading global env from ${DOCKER_GLOBAL_ENV_FILENAME}"
     # shellcheck disable=SC1091,SC1090
     source "${DOCKER_GLOBAL_ENV_FILENAME}"
-    set +x # disable printing of environment variables
 fi
+
+# 3. Version file
 # shellcheck disable=SC1091
 source .docker/docker.version
-PROJECT_ID_ENV_FILE=".docker/.ids/${PROJECT_ID}.env"
-if [ -e "${PROJECT_ID_ENV_FILE}" ]; then
-    echo "Loading project ID specific environment variables from ${PROJECT_ID_ENV_FILE}"
-    set -x # print commands and their arguments
-    # shellcheck disable=SC1091,SC1090
-    source "${PROJECT_ID_ENV_FILE}"
-    set +x # disable printing of environment variables
-fi
+IMAGE_VARIANT="${VARIANT}"
+
+# 4. Common configuration (sets defaults for all variables)
 if [ -e .docker/docker.common.env ]; then
-    echo "Loading common environment variables from .docker/docker.common.env"
-    set -x # print commands and their arguments
+    echo "Loading common env from .docker/docker.common.env"
     # shellcheck disable=SC1091
     source .docker/docker.common.env
-    set +x # disable printing of environment variables
 fi
-if [ -e ".docker/docker.${VARIANT}.env" ]; then
-    echo "Loading environment variables from .docker/docker.${VARIANT}.env"
-    set -x # print commands and their arguments
+
+# 5. Variant-specific configuration (BUILD_FROM, VARIANT_TYPE)
+VARIANT_ENV_FILE=".docker/variants/${VARIANT}.env"
+if [ -e "${VARIANT_ENV_FILE}" ]; then
+    echo "Loading variant env from ${VARIANT_ENV_FILE}"
     # shellcheck disable=SC1091,SC1090
-    source ".docker/docker.${VARIANT}.env"
-    set +x # disable printing of environment variables
+    source "${VARIANT_ENV_FILE}"
+else
+    echo "Warning: variant env file not found: ${VARIANT_ENV_FILE}" >&2
 fi
+
+# 6. Project-specific overrides (loaded LAST for highest priority)
+PROJECT_ID_ENV_FILE=".docker/.ids/${PROJECT_ID}.env"
+if [ -e "${PROJECT_ID_ENV_FILE}" ]; then
+    echo "Loading project env from ${PROJECT_ID_ENV_FILE}"
+    # shellcheck disable=SC1091,SC1090
+    source "${PROJECT_ID_ENV_FILE}"
+fi
+
+# Re-compute derived values after all overrides
+# Project env may override USER_UID/USER_GID, DEVCON_* variables
+CONTAINER_USER_UID=${USER_UID:-"9001"}
+CONTAINER_USER_GID=${USER_GID:-"9001"}
+CONTAINER_CUDA_DEVICE_ID=${DEVCON_CUDA_DEVICE_ID:-${CONTAINER_CUDA_DEVICE_ID:-"all"}}
+HOST_SSH_PORT=${DEVCON_HOST_SSH_PORT:-${HOST_SSH_PORT:-"2929"}}
+HOST_JUPYTER_PORT=${DEVCON_HOST_JUPYTER_PORT:-${HOST_JUPYTER_PORT:-"18998"}}
+CONTAINER_JUPYTER_TOKEN=${DEVCON_JUPYTER_TOKEN:-${CONTAINER_JUPYTER_TOKEN:-"__juypter_token_(change_me)__"}}
+HOST_WEB_SVC_PORT=${DEVCON_HOST_WEB_SVC_PORT:-${HOST_WEB_SVC_PORT:-"19090"}}
+IMAGE_VARIANT="${VARIANT}"
+IMAGE_TAG="${IMAGE_VERSION}-${IMAGE_VARIANT}"
+IMAGE_NAME="${CONTAINER_REGISTRY}/${DOCKER_USERNAME}/${DOCKER_PROJECT_NAME}"
+CONTAINER_PROJECT_NAME="${DOCKER_PROJECT_NAME}-${DOCKER_PROJECT_ID}"
+CONTAINER_HOSTNAME="${DOCKER_PROJECT_NAME}-${DOCKER_PROJECT_ID}"
+
 set +a
 
-# prepare docker network
+# --- Prepare docker network ---
 CONTAINER_NETWORK_NAME=${CONTAINER_NETWORK_NAME:-""}
 if [[ -n "${CONTAINER_NETWORK_NAME}" ]] && ! docker network ls | grep -q "${CONTAINER_NETWORK_NAME}"; then
     echo "Creating network ${CONTAINER_NETWORK_NAME}"
@@ -163,24 +139,21 @@ else
     echo "Network ${CONTAINER_NETWORK_NAME} already exists."
 fi
 
-# prepare local workspace to be mounted
+# --- Prepare local workspace directories ---
 echo "Preparing local workspace directories"
-HOST_WORKSPACE_ROOT="${HOST_WORKSPACE_ROOT:-}"
-[ -n "${HOST_WORKSPACE_ROOT}" ] && [ ! -d "${HOST_WORKSPACE_ROOT}" ] && mkdir -p "${HOST_WORKSPACE_ROOT}"
+for dir in HOST_WORKSPACE_ROOT HOST_SSH_DIR HOST_CACHE_DIR HOST_HF_HOME HOST_GH_CONFIG_DIR HOST_PASSAGE_DIR; do
+    val="${!dir:-}"
+    [ -n "$val" ] && [ ! -d "$val" ] && mkdir -p "$val"
+done
+# Copy scripts if directory doesn't exist yet
 HOST_SCRIPTS_DIR="${HOST_SCRIPTS_DIR:-}"
 [ -n "${HOST_SCRIPTS_DIR}" ] && [ ! -d "${HOST_SCRIPTS_DIR}" ] && cp -r "$PWD/.docker/scripts" "${HOST_SCRIPTS_DIR}"
-HOST_SSH_DIR="${HOST_SSH_DIR:-}"
-[ -n "${HOST_SSH_DIR}" ] && [ ! -d "${HOST_SSH_DIR}" ] && mkdir -p "${HOST_SSH_DIR}"
-HOST_CACHE_DIR="${HOST_CACHE_DIR:-}"
-[ -n "${HOST_CACHE_DIR}" ] && [ ! -d "${HOST_CACHE_DIR}" ] && mkdir -p "${HOST_CACHE_DIR}"
-HOST_HF_HOME="${HOST_HF_HOME:-}"
-[ -n "${HOST_HF_HOME}" ] && [ ! -d "${HOST_HF_HOME}" ] && mkdir -p "${HOST_HF_HOME}"
-HOST_GH_CONFIG_DIR="${HOST_GH_CONFIG_DIR:-}"
-[ -n "${HOST_GH_CONFIG_DIR}" ] && [ ! -d "${HOST_GH_CONFIG_DIR}" ] && mkdir -p "${HOST_GH_CONFIG_DIR}"
-HOST_PASSAGE_DIR="${HOST_PASSAGE_DIR:-}"
-[ -n "${HOST_PASSAGE_DIR}" ] && [ ! -d "${HOST_PASSAGE_DIR}" ] && mkdir -p "${HOST_PASSAGE_DIR}"
 
-# run docker compose
+# --- Determine compose file from VARIANT_TYPE ---
+VARIANT_TYPE=${VARIANT_TYPE:-"ubuntu"}
+COMPOSE_FILE=".docker/docker-compose.${VARIANT_TYPE}.yaml"
+
+# --- Execute docker compose command ---
 if [ "${COMMAND}" == "push" ]; then
     docker push "${CONTAINER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
 elif [ "${COMMAND}" == "login" ]; then
@@ -188,11 +161,11 @@ elif [ "${COMMAND}" == "login" ]; then
     docker login ghcr.io -u "$GITHUB_USERNAME"
 elif [ "${COMMAND}" == "run" ]; then
     docker compose --project-directory . \
-        -f ".docker/docker-compose.${VARIANT}.yaml" \
+        -f "${COMPOSE_FILE}" \
         run workspace "${RUN_COMMAND}" "${ADDITIONAL_ARGS[@]}"
 else
     docker compose --project-directory . \
-        -f ".docker/docker-compose.${VARIANT}.yaml" \
+        -f "${COMPOSE_FILE}" \
         -p "${CONTAINER_PROJECT_NAME}" \
         "${COMMAND}" "${ADDITIONAL_ARGS[@]}"
 fi
