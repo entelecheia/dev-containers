@@ -11,25 +11,19 @@ dependencies = []
 [project.urls]
 Repository = "https://github.com/entelecheia/dev-containers"
 
-[tool.uv]
-dev-dependencies = ["python-semantic-release>=9.0.0"]
+[dependency-groups]
+dev = ["python-semantic-release>=9.0.0"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
 tag_format = "v$version"
 
 [tool.semantic_release]
-branch = "main"
-version_toml = "pyproject.toml:project.version"
-version_pattern = '.docker/docker.version:IMAGE_VERSION="{version}"'
-version_source = "tag"
-commit_version_number = true                                                             # required for version_source = "tag"
-commit_subject = "chore(release): :rocket: {version} [skip ci]"
-prerelease_tag = "rc"
+version_toml = ["pyproject.toml:project.version"]
+version_variables = [".docker/docker.version:IMAGE_VERSION"]
+commit_message = "chore(release): :rocket: {version} [skip ci]"
 major_on_zero = true
-tag_commit = true
-changelog_file = "CHANGELOG.md"
-upload_to_repository = false
-upload_to_release = false
-hvcs = "github"                                                                          # hosting version control system, gitlab is also supported
 build_command = "mkdir -p dist && echo 'No build command configured' > dist/release.txt"
+
+[tool.semantic_release.publish]
+upload_to_vcs_release = false
