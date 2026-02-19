@@ -19,13 +19,16 @@ sudo service ssh start
 # set token to value of JUPYTER_TOKEN
 # set port to value of JUPYTER_DOCKER_PORT
 if [[ -z "$(command -v jupyter)" ]]; then
-    echo "Jupyter not installed. Exiting..."
-    exit 1
+    echo "Jupyter not installed. Skipping Jupyter Lab startup."
+    echo "Container is running with SSH access only."
+    # Keep the container running
+    sleep infinity
+else
+    jupyter lab \
+        --no-browser \
+        --notebook-dir="$WORKSPACE_ROOT" \
+        --ServerApp.token="$JUPYTER_TOKEN" \
+        --port="$JUPYTER_PORT" \
+        --ip=0.0.0.0 \
+        --allow-root
 fi
-jupyter lab \
-    --no-browser \
-    --notebook-dir="$WORKSPACE_ROOT" \
-    --ServerApp.token="$JUPYTER_TOKEN" \
-    --port="$JUPYTER_PORT" \
-    --ip=0.0.0.0 \
-    --allow-root

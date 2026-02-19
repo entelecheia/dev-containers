@@ -1,20 +1,18 @@
-[tool.poetry]
+[project]
 name = "devcon"
 version = "0.4.1"
 description = "Development containers, or dev containers, are Docker containers that are specifically configured to provide a fully featured development environment."
-authors = ["Young Joon Lee <entelecheia@hotmail.com>"]
-license = "MIT"
-repository = "https://github.com/entelecheia/dev-containers"
+authors = [{name = "Young Joon Lee", email = "entelecheia@hotmail.com"}]
+license = {text = "MIT"}
 readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
 
-[tool.poetry.dependencies]
-python = ">=3.8.1,<3.13"
+[project.urls]
+Repository = "https://github.com/entelecheia/dev-containers"
 
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-python-semantic-release = "^9.0.0"
+[tool.uv]
+dev-dependencies = ["python-semantic-release>=9.0.0"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
@@ -22,7 +20,7 @@ tag_format = "v$version"
 
 [tool.semantic_release]
 branch = "main"
-version_toml = "pyproject.toml:tool.poetry.version"
+version_toml = "pyproject.toml:project.version"
 version_pattern = '.docker/docker.version:IMAGE_VERSION="{version}"'
 version_source = "tag"
 commit_version_number = true                                                             # required for version_source = "tag"

@@ -35,6 +35,12 @@ gc-prune: ## garbage collect and prune
 
 ##@ Setup
 
+install-pipx: ## install pipx (pre-requisite for external tools)
+	@command -v pipx &> /dev/null || pip install --user pipx || true
+
+install-uv: ## install uv package manager
+	@command -v uv &> /dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh || true
+
 install-node: ## install node
 	@export NVM_DIR="$${HOME}/.nvm"; \
 	[ -s "$${NVM_DIR}/nvm.sh" ] && . "$${NVM_DIR}/nvm.sh"; \
@@ -50,19 +56,7 @@ set-default-node: ## set default node
 	[ -s "$${NVM_DIR}/nvm.sh" ] && . "$${NVM_DIR}/nvm.sh"; \
 	nvm alias default node
 
-install-pipx: ## install pipx (pre-requisite for external tools)
-	@command -v pipx &> /dev/null || pip install --user pipx || true
-
-install-copier: install-pipx ## install copier (pre-requisite for init-project)
-	@command -v copier &> /dev/null || pipx install copier || true
-
-install-poetry: install-pipx ## install poetry (pre-requisite for install)
-	@command -v poetry &> /dev/null || pipx install poetry || true
-
-install-poe: install-pipx ## install poetry (pre-requisite for install)
-	@command -v poe &> /dev/null || pipx install poethepoet || true
-
-install-commitzen: install-pipx ## install commitzen (pre-requisite for commit)
+install-commitizen: install-pipx ## install commitizen (pre-requisite for commit)
 	@command -v cz &> /dev/null || pipx install commitizen || true
 
 install-precommit: install-pipx ## install pre-commit
@@ -71,21 +65,45 @@ install-precommit: install-pipx ## install pre-commit
 install-precommit-hooks: install-precommit ## install pre-commit hooks
 	@pre-commit install
 
-initialize: install-pipx ## initialize the project environment
-	@pipx install copier
-	@pipx install poethepoet
-	@pipx install commitizen
-	@pipx install pre-commit
+initialize: install-uv install-pipx install-commitizen install-precommit ## initialize the project environment
 	@pre-commit install
 
-init-project: initialize ## initialize the project (Warning: do this only once!)
-	@copier copy --trust --answers-file .copier-docker-config.yaml gh:entelecheia/hyperfast-docker-template .
+##@ Dependencies
 
-reinit-project: install-copier ## reinitialize the project (Warning: this may overwrite existing files!)
-	@bash -c 'args=(); while IFS= read -r file; do args+=("--skip" "$$file"); done < .copierignore; copier copy "$${args[@]}" --answers-file .copier-docker-config.yaml --trust gh:entelecheia/hyperfast-docker-template .'
+install: ## install dependencies (production only)
+	@uv sync --no-dev
 
-reinit-project-force: install-copier ## initialize the project ignoring existing files (Warning: this will overwrite existing files!)
-	@bash -c 'args=(); while IFS= read -r file; do args+=("--skip" "$$file"); done < .copierignore; copier copy "$${args[@]}" --answers-file .copier-docker-config.yaml --trust --force gh:entelecheia/hyperfast-docker-template .'
+install-dev: ## install dependencies (including dev)
+	@uv sync
+
+update: ## update all dependencies
+	@uv lock --upgrade
+
+lock: ## lock dependencies without upgrading
+	@uv lock
+
+##@ Release
+
+version: ## print current version
+	@uv run semantic-release print-version --current
+
+next-version: ## print next version
+	@uv run semantic-release print-version --next
+
+changelog: ## print changelog for current version
+	@uv run semantic-release changelog --released
+
+next-changelog: ## print changelog for next version
+	@uv run semantic-release changelog --unreleased
+
+release-noop: ## dry-run of the release process
+	@uv run semantic-release publish --noop -v DEBUG
+
+release-ci: ## run the release process in CI
+	@uv run semantic-release publish -v DEBUG -D commit_author='github-actions <action@github.com>'
+
+prerelease-noop: ## dry-run of the prerelease process
+	@uv run semantic-release publish --noop -v DEBUG --prerelease
 
 ##@ Docker
 
